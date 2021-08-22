@@ -5,7 +5,7 @@ A simple launcher for [TruckersMP][truckersmp] to play ATS or ETS2 in multiplaye
 _truckersmp-cli_ allows to download TruckersMP and handles starting TruckersMP through [Wine][wine] while supporting the Windows versions of [American Truck Simulator][steam:ats] and [Euro Truck Simulator 2][steam:ets2].
 
 The [Windows version of Steam][steam:windows] should already be able to run in the same Wine prefix.
-The Windows versions of ATS and ETS2 can be installed and updated via [SteamCMD][steam:steamcmd] while all running Steam processes will be stopped to prevent Steam from loosing connection. Your Steam password and guard code are required by SteamCMD once for this to work.
+The Windows versions of ATS and ETS2 can be installed and updated via [SteamCMD][steam:steamcmd] while all running Steam processes will be stopped to prevent Steam from losing connection. Your Steam password and guard code are required by SteamCMD once for this to work.
 
 On Linux it's possible to start TruckersMP through [Proton][github:proton]. A working [native Steam][repology:steam] installation is needed for this which has the desired game [installed or with an update pending][github:issue129]. SteamCMD can use your saved credentials for convenience.
 
@@ -15,7 +15,7 @@ On Linux it's possible to start TruckersMP through [Proton][github:proton]. A wo
     * A workaround is to use D3D11 rendering backend by specifying `-d` (`--enable-d3d11`)
 * If D3D11 rendering backend is used, TruckersMP login screen is not shown without Windows native 64-bit `d3dcompiler_47.dll`
     * `truckersmp-cli` will automatically download and set up the Windows native dll when D3D11 is used
-* If Steam is running while SteamCMD is being used the Steam client looses all connections and maybe asks for the password and the guard code at the next startup. This script closes all Steam processes before acting with SteamCMD so **starting an update with a shortcut out of the Steam client won't work** because Steam waits for the script to finish and the script waits for Steam to quit.
+* If Steam is running while SteamCMD is being used the Steam client loses all connections and maybe asks for the password and the guard code at the next startup. This script closes all Steam processes before acting with SteamCMD so **starting an update with a shortcut out of the Steam client won't work** because Steam waits for the script to finish and the script waits for Steam to quit.
 
 ## Install
 
