@@ -42,7 +42,7 @@ You can get the latest pre-built release from [the release page][github:release-
 
 #### Required
 
-* [`python`][repology:python] in version 3.6 (released in December 2016) or later
+* [`python`][repology:python] in version 3.10 (released in October 2021) or later
 * [`sdl2`][repology:sdl2] in x86_64
 * `steam` either the [native Linux version][repology:steam] in use with Proton or the [Windows Steam][steam:windows] in use with Wine
 

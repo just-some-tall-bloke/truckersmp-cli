@@ -21,6 +21,7 @@ import urllib.parse
 import urllib.request
 from getpass import getuser
 from gettext import ngettext
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .variables import Args, Dir, File, URL
 
@@ -28,12 +29,13 @@ from .variables import Args, Dir, File, URL
 VDF_IS_AVAILABLE = False
 try:
     import vdf
+
     VDF_IS_AVAILABLE = True
 except ImportError:
     pass
 
 
-def activate_native_d3dcompiler_47(prefix, wine):
+def activate_native_d3dcompiler_47(prefix: str, wine: List[str]) -> None:
     """
     Download/activate native 64-bit version of d3dcompiler_47.
 
@@ -54,8 +56,11 @@ def activate_native_d3dcompiler_47(prefix, wine):
         logging.debug("Downloading d3dcompiler_47.dll")
         os.makedirs(Dir.dllsdir, exist_ok=True)
         if not download_files(
-                URL.github,
-                [(URL.d3dcompilerpath, File.d3dcompiler_47, File.d3dcompiler_47_md5), ]):
+            URL.github,
+            [
+                (URL.d3dcompilerpath, File.d3dcompiler_47, File.d3dcompiler_47_md5),
+            ],
+        ):
             sys.exit("Failed to download d3dcompiler_47.dll")
 
     # copy into system32
@@ -74,14 +79,30 @@ def activate_native_d3dcompiler_47(prefix, wine):
     exename = "eurotrucks2.exe" if Args.ets2 else "amtrucks.exe"
     logging.debug("Adding DLL override setting for %s", exename)
     subproc.call(
-        wine + [
-            "reg", "add",
+        wine
+        + [
+            "reg",
+            "add",
             f"HKCU\\Software\\Wine\\AppDefaults\\{exename}\\DllOverrides",
-            "/v", "d3dcompiler_47", "/t", "REG_SZ", "/d", "native", "/f"],
-        env=env)
+            "/v",
+            "d3dcompiler_47",
+            "/t",
+            "REG_SZ",
+            "/d",
+            "native",
+            "/f",
+        ],
+        env=env,
+    )
 
 
-def check_and_unpack_tar(f_tar, path=".", members=None, *, numeric_owner=False):
+def check_and_unpack_tar(
+    f_tar: tarfile.TarFile,
+    path: str = ".",
+    members: Optional[Any] = None,
+    *,
+    numeric_owner: bool = False,
+) -> None:
     """
     Check and try to unpack a tar archive.
 
@@ -100,7 +121,7 @@ def check_and_unpack_tar(f_tar, path=".", members=None, *, numeric_owner=False):
     f_tar.extractall(path, members, numeric_owner=numeric_owner)
 
 
-def check_hash(path, digest, hashobj):
+def check_hash(path: str, digest: str, hashobj: Any) -> bool:
     """
     Compare given digest and calculated one.
 
@@ -120,7 +141,7 @@ def check_hash(path, digest, hashobj):
     return hashobj.hexdigest() == digest
 
 
-def check_libsdl2():
+def check_libsdl2() -> bool:
     """
     Check whether SDL2 shared object file is present.
 
@@ -139,7 +160,11 @@ def check_libsdl2():
         return False
 
 
-def check_steam_process(use_proton, wine=None, env=None):
+def check_steam_process(
+    use_proton: bool,
+    wine: Optional[List[str]] = None,
+    env: Optional[Dict[str, str]] = None,
+) -> bool:
     """
     Check whether Steam client is already running.
 
@@ -155,7 +180,8 @@ def check_steam_process(use_proton, wine=None, env=None):
     if use_proton:
         try:
             subproc.check_call(
-                ("pgrep", "-u", getuser(), "-x", "steam"), stdout=subproc.DEVNULL)
+                ("pgrep", "-u", getuser(), "-x", "steam"), stdout=subproc.DEVNULL
+            )
             return True
         except (OSError, subproc.CalledProcessError):
             return False
@@ -171,7 +197,7 @@ def check_steam_process(use_proton, wine=None, env=None):
             for line in output.decode("utf-8").splitlines():
                 line = line[:-1]  # strip last "'" for rindex()
                 try:
-                    exename = line[line.rindex("'") + 1:]
+                    exename = line[line.rindex("'") + 1 :]
                 except ValueError:
                     continue
                 if exename.lower().endswith("steam.exe"):
@@ -182,7 +208,11 @@ def check_steam_process(use_proton, wine=None, env=None):
         return steam_is_running
 
 
-def download_files(host, files_to_download, progress_count=None):
+def download_files(
+    host: str,
+    files_to_download: List[Tuple[str, str, str]],
+    progress_count: Optional[Tuple[int, int]] = None,
+) -> bool:
     """Download files."""
     file_count = progress_count[0] if progress_count else 1
     num_of_files = progress_count[1] if progress_count else len(files_to_download)
@@ -200,7 +230,8 @@ def download_files(host, files_to_download, progress_count=None):
             if len(name_getting) >= 49:
                 name_getting = name_getting[:45] + "..."
             logging.debug(
-                "Downloading file https://%s%s to %s", host, path, dest["dir"])
+                "Downloading file https://%s%s to %s", host, path, dest["dir"]
+            )
 
             # make file hierarchy
             os.makedirs(dest["dir"], exist_ok=True)
@@ -216,9 +247,12 @@ def download_files(host, files_to_download, progress_count=None):
                 if len(newloc.query) > 0:
                     newpath += "?" + newloc.query
                 if not download_files(
-                        newloc.netloc,
-                        [(newpath, dest["abspath"], md5), ],
-                        (file_count, num_of_files)):
+                    newloc.netloc,
+                    [
+                        (newpath, dest["abspath"], md5),
+                    ],
+                    (file_count, num_of_files),
+                ):
                     return False
                 # downloaded successfully from redirected URL
                 del files_to_download[0]
@@ -227,7 +261,8 @@ def download_files(host, files_to_download, progress_count=None):
                 continue
             if res.status != 200:
                 logging.error(
-                    "Server %s responded with status code %s.", host, res.status)
+                    "Server %s responded with status code %s.", host, res.status
+                )
                 return False
 
             write_downloaded_file(dest["abspath"], res, md5hash, name_getting)
@@ -254,7 +289,7 @@ def download_files(host, files_to_download, progress_count=None):
     return True
 
 
-def find_discord_ipc_sockets():
+def find_discord_ipc_sockets() -> List[str]:
     """
     Find Discord IPC sockets when using wine-discord-ipc-bridge.
 
@@ -277,16 +312,15 @@ def find_discord_ipc_sockets():
     # Combine globs to avoid the use of "**":
     # Using the “**” pattern in large directory trees may consume a huge amount of time.
     xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR", "/tmp")
-    results = glob.glob(
-        os.path.join(xdg_runtime_dir, "discord-ipc-*"))
+    results = glob.glob(os.path.join(xdg_runtime_dir, "discord-ipc-*"))
     results += glob.glob(
-        os.path.join(xdg_runtime_dir, "app", "com.discordapp.Discord", "discord-ipc-*"))
-    results += glob.glob(
-        os.path.join(xdg_runtime_dir, "snap.discord", "discord-ipc-*"))
+        os.path.join(xdg_runtime_dir, "app", "com.discordapp.Discord", "discord-ipc-*")
+    )
+    results += glob.glob(os.path.join(xdg_runtime_dir, "snap.discord", "discord-ipc-*"))
     return results
 
 
-def get_current_steam_user():
+def get_current_steam_user() -> Optional[str]:
     """
     Get the current AccountName with saved login credentials.
 
@@ -305,7 +339,9 @@ def get_current_steam_user():
                 login_vdf = vdf.parse(f_in)
 
             for info in login_vdf["users"].values():
-                remember = "RememberPassword" in info and info["RememberPassword"] == "1"
+                remember = (
+                    "RememberPassword" in info and info["RememberPassword"] == "1"
+                )
                 recent_uc = "MostRecent" in info and info["MostRecent"] == "1"
                 recent_lc = "mostrecent" in info and info["mostrecent"] == "1"
                 if remember and (recent_lc or recent_uc) and "AccountName" in info:
@@ -315,7 +351,7 @@ def get_current_steam_user():
     return None
 
 
-def get_mtime(files):
+def get_mtime(files: List[str]) -> List[float]:
     """
     Get and return st_mtime from given files.
 
@@ -334,18 +370,21 @@ def get_mtime(files):
     return results
 
 
-def get_proton_dist_dir():
+def get_proton_dist_dir() -> str:
     """Determine and return the path to the dist directorty in Proton directory."""
     return os.path.join(
         Args.protondir,
         # the subdir is "dist" (official) or "files" (some forked builds)
-        "files" if os.access(
+        "files"
+        if os.access(
             os.path.join(Args.protondir, "files/bin/wine"),
             os.R_OK | os.X_OK,
-        ) else "dist")
+        )
+        else "dist",
+    )
 
 
-def get_proton_version(protondir):
+def get_proton_version(protondir: str) -> Tuple[int, int]:
     """
     Get Proton version from "version" file.
 
@@ -364,20 +403,24 @@ def get_proton_version(protondir):
         ver = f_version.read(128)
     if "proton-tkg" in ver:
         # 11 = len("proton-tkg") + 1
-        major, minor = ver[ver.index("proton-tkg") + 11:].split(".")[:2]
+        major, minor = ver[ver.index("proton-tkg") + 11 :].split(".")[:2]
     elif "GE-Proton" in ver:
         # 9 = len("GE-Proton")
-        major, minor = (ver[ver.index("GE-Proton") + 9:ver.rindex("-")], 0)
+        major, minor = (ver[ver.index("GE-Proton") + 9 : ver.rindex("-")], 0)
     elif "experimental-" in ver:
-        major, minor = ver.replace("bleeding-edge-", "").partition(
-            "experimental-")[2].split("-")[0].split(".")[:2]
+        major, minor = (
+            ver.replace("bleeding-edge-", "")
+            .partition("experimental-")[2]
+            .split("-")[0]
+            .split(".")[:2]
+        )
     else:
         ver = ver.replace("proton-", "")
-        major, minor = ver[ver.index(" ") + 1:ver.index("-")].split(".")
+        major, minor = ver[ver.index(" ") + 1 : ver.index("-")].split(".")
     return int(major), int(minor)
 
 
-def get_short_size(size_bytes):
+def get_short_size(size_bytes: int) -> str:
     """
     Get a file size string in short format.
 
@@ -395,7 +438,7 @@ def get_short_size(size_bytes):
     return f"{size_bytes / 1048576:.1f}M"
 
 
-def get_steam_library_dirs(steamdir):
+def get_steam_library_dirs(steamdir: str) -> List[str]:
     """
     Get Steam library directories.
 
@@ -404,7 +447,9 @@ def get_steam_library_dirs(steamdir):
     # pylint: disable=consider-using-with
     #
     # the 1st Steam library directory is the Steam installation
-    steam_libraries = [steamdir, ]
+    steam_libraries = [
+        steamdir,
+    ]
     # additional directories are stored in libraryfolders.vdf
     #
     # old format example:
@@ -440,10 +485,12 @@ def get_steam_library_dirs(steamdir):
     try:
         try:
             f_vdf = open(
-                os.path.join(steamdir, File.steamlibvdf_inner), encoding="utf-8")
+                os.path.join(steamdir, File.steamlibvdf_inner), encoding="utf-8"
+            )
         except OSError:
             f_vdf = open(
-                os.path.join(steamdir, File.steamlibvdf_inner_legacy), encoding="utf-8")
+                os.path.join(steamdir, File.steamlibvdf_inner_legacy), encoding="utf-8"
+            )
         with f_vdf:
             for line in f_vdf:
                 # skip lines that don't have 4 quotes
@@ -470,7 +517,7 @@ def get_steam_library_dirs(steamdir):
     return steam_libraries
 
 
-def is_d3dcompiler_setup_skippable():
+def is_d3dcompiler_setup_skippable() -> bool:
     """
     Check whether native d3dcompiler setup can be skipped.
 
@@ -510,10 +557,10 @@ def is_d3dcompiler_setup_skippable():
     ver_pfx = {"major": 1, "minor": -1}
     try:
         with open(
-                os.path.join(Args.prefixdir, "version"),
-                encoding="utf-8") as f_prefix_ver:
+            os.path.join(Args.prefixdir, "version"), encoding="utf-8"
+        ) as f_prefix_ver:
             ver = f_prefix_ver.readline().replace("-GE-", "-")
-            major, minor = ver[:ver.index("-")].split(".")
+            major, minor = ver[: ver.index("-")].split(".")
             ver_pfx["major"], ver_pfx["minor"] = int(major), int(minor)
     except (OSError, ValueError):
         pass
@@ -528,8 +575,8 @@ def is_d3dcompiler_setup_skippable():
         with open(os.path.join(Args.protondir, "proton"), encoding="utf-8") as f_proton:
             for line in f_proton:
                 if line.startswith('CURRENT_PREFIX_VERSION="'):
-                    ver = line[line.index('"') + 1:-1]
-                    major, minor = ver[:ver.index("-")].split(".")
+                    ver = line[line.index('"') + 1 : -1]
+                    major, minor = ver[: ver.index("-")].split(".")
                     ver_proton["major"], ver_proton["minor"] = int(major), int(minor)
     except (OSError, ValueError):
         pass
@@ -540,13 +587,18 @@ def is_d3dcompiler_setup_skippable():
 
     logging.debug(
         "Proton:(%d, %d), Prefix:(%d, %d)",
-        ver_proton["major"], ver_proton["minor"], ver_pfx["major"], ver_pfx["minor"])
-    return (ver_proton["major"] > ver_pfx["major"]
-            or (ver_proton["major"] == ver_pfx["major"]
-                and ver_proton["minor"] >= ver_pfx["minor"]))
+        ver_proton["major"],
+        ver_proton["minor"],
+        ver_pfx["major"],
+        ver_pfx["minor"],
+    )
+    return ver_proton["major"] > ver_pfx["major"] or (
+        ver_proton["major"] == ver_pfx["major"]
+        and ver_proton["minor"] >= ver_pfx["minor"]
+    )
 
 
-def is_dos_style_abspath(path):
+def is_dos_style_abspath(path: str) -> bool:
     """
     Check whether the given path is a DOS/Windows style absolute path.
 
@@ -561,7 +613,7 @@ def is_dos_style_abspath(path):
     return path[1:3] == ":\\"
 
 
-def is_envar_enabled(envars, name):
+def is_envar_enabled(envars: Dict[str, str], name: str) -> bool:
     """
     Check whether the specified environment variable is enabled.
 
@@ -578,7 +630,7 @@ def is_envar_enabled(envars, name):
     return len(value) > 0 and value != "0"
 
 
-def is_within_directory(dir1, dir2):
+def is_within_directory(dir1: str, dir2: str) -> bool:
     """
     Check whether directory dir1 is within dir2.
 
@@ -589,7 +641,9 @@ def is_within_directory(dir1, dir2):
     return os.path.commonpath((dir2_abs, os.path.abspath(dir1))) == dir2_abs
 
 
-def log_info_formatted_envars_and_args(runner, env_print, env, args):
+def log_info_formatted_envars_and_args(
+    runner: str, env_print: List[str], env: Dict[str, str], args: List[str]
+) -> None:
     """
     Print formatted envars and command line with logging level "info".
 
@@ -619,7 +673,7 @@ def log_info_formatted_envars_and_args(runner, env_print, env, args):
     logging.info("Running %s:\n  %s%s", runner, env_str, cmd_str)
 
 
-def perform_self_update():
+def perform_self_update() -> None:
     """
     Update files to latest release. Do nothing for Python package.
 
@@ -638,8 +692,8 @@ def perform_self_update():
     # we don't update when Python package is used
     try:
         with open(
-                os.path.join(os.path.dirname(Dir.scriptdir), "RELEASE"),
-                encoding="utf-8") as f_in:
+            os.path.join(os.path.dirname(Dir.scriptdir), "RELEASE"), encoding="utf-8"
+        ) as f_in:
             # do nothing if the installed version is latest
             if release == f_in.readline().rstrip():
                 logging.info("Already up-to-date.")
@@ -668,7 +722,7 @@ def perform_self_update():
     # update files
     archive_dir = os.path.join(topdir, "truckersmp-cli-" + release)
     for root, _dirs, files in os.walk(archive_dir, topdown=False):
-        inner_root = root[len(archive_dir):]
+        inner_root = root[len(archive_dir) :]
         destdir = topdir + inner_root
         logging.debug("Creating directory %s", destdir)
         os.makedirs(destdir, exist_ok=True)
@@ -683,7 +737,7 @@ def perform_self_update():
     logging.info("Self update complete")
 
 
-def print_child_output(proc):
+def print_child_output(proc: Any) -> None:
     """
     Print child process output.
 
@@ -693,11 +747,10 @@ def print_child_output(proc):
         try:
             print(line.decode("utf-8"), end="", flush=True)
         except UnicodeDecodeError:
-            print(
-                "!! NON UNICODE OUTPUT !!", repr(line), sep="  ", end="", flush=True)
+            print("!! NON UNICODE OUTPUT !!", repr(line), sep="  ", end="", flush=True)
 
 
-def setup_wine_discord_ipc_bridge():
+def setup_wine_discord_ipc_bridge() -> str:
     """
     Check and download wine-discord-ipc-bridge.
 
@@ -720,13 +773,17 @@ def setup_wine_discord_ipc_bridge():
         logging.debug("Downloading winediscordipcbridge.exe")
         os.makedirs(Dir.ipcbrdir, exist_ok=True)
         if not download_files(
-                URL.github, [(URL.ipcbrpath, File.ipcbridge, File.ipcbridge_md5), ]):
+            URL.github,
+            [
+                (URL.ipcbrpath, File.ipcbridge, File.ipcbridge_md5),
+            ],
+        ):
             sys.exit("Failed to download winediscordipcbridge.exe")
 
     return File.ipcbridge
 
 
-def set_wine_desktop_registry(prefix, wine, enable):
+def set_wine_desktop_registry(prefix: str, wine: List[str], enable: bool) -> None:
     """
     Set Wine desktop registry.
 
@@ -750,27 +807,53 @@ def set_wine_desktop_registry(prefix, wine, enable):
     if enable:
         logging.info("Enabling Wine desktop (%s)", Args.wine_desktop)
         subproc.call(
-            wine + [
-                "reg", "add", regkey_explorer,
-                "/v", "Desktop", "/t", "REG_SZ", "/d", "Default", "/f"],
-            env=env)
+            wine
+            + [
+                "reg",
+                "add",
+                regkey_explorer,
+                "/v",
+                "Desktop",
+                "/t",
+                "REG_SZ",
+                "/d",
+                "Default",
+                "/f",
+            ],
+            env=env,
+        )
         subproc.call(
-            wine + [
-                "reg", "add", regkey_desktops,
-                "/v", "Default", "/t", "REG_SZ", "/d", Args.wine_desktop, "/f"],
-            env=env)
+            wine
+            + [
+                "reg",
+                "add",
+                regkey_desktops,
+                "/v",
+                "Default",
+                "/t",
+                "REG_SZ",
+                "/d",
+                Args.wine_desktop,
+                "/f",
+            ],
+            env=env,
+        )
     else:
         logging.info("Disabling Wine desktop")
         subproc.call(
-            wine + [
-                "reg", "delete", regkey_explorer, "/v", "Desktop", "/f"], env=env)
+            wine + ["reg", "delete", regkey_explorer, "/v", "Desktop", "/f"], env=env
+        )
         subproc.call(
-            wine + [
-                "reg", "delete", regkey_desktops, "/v", "Default", "/f"], env=env)
+            wine + ["reg", "delete", regkey_desktops, "/v", "Default", "/f"], env=env
+        )
 
 
 def wait_for_loginvdf_update(
-        use_proton, loginvdfs_checked, loginvdfs_timestamps, timeout=99):
+    use_proton: bool,
+    loginvdfs_checked: List[str],
+    loginvdfs_timestamps: List[float],
+    timeout: int = 99,
+) -> Optional[str]:
     """
     Wait until loginusers.vdf (one of loginvdfs_checked) is updated.
 
@@ -785,10 +868,14 @@ def wait_for_loginvdf_update(
     steamdir = None
     waittime = timeout
     while waittime > 0:
-        print(ngettext(
-            "\rWaiting {} second for steam to start up. ",
-            "\rWaiting {} seconds for steam to start up. ",
-            waittime).format(waittime), end="")
+        print(
+            ngettext(
+                "\rWaiting {} second for steam to start up. ",
+                "\rWaiting {} seconds for steam to start up. ",
+                waittime,
+            ).format(waittime),
+            end="",
+        )
         time.sleep(1)
         waittime -= 1
         for i, path in enumerate(loginvdfs_checked):
@@ -797,7 +884,8 @@ def wait_for_loginvdf_update(
                 if stat.st_mtime > loginvdfs_timestamps[i]:
                     print(f"\r{' ' * 70}")  # clear "Waiting..." line
                     logging.debug(
-                        "Steam should now be up and running and the user logged in.")
+                        "Steam should now be up and running and the user logged in."
+                    )
                     steamdir = os.path.dirname(os.path.dirname(path))
                     break
             except OSError:
@@ -821,7 +909,12 @@ def wait_for_loginvdf_update(
     return steamdir
 
 
-def wait_for_steam(use_proton, loginvdf_paths, wine=None, env=None):
+def wait_for_steam(
+    use_proton: bool,
+    loginvdf_paths: List[str],
+    wine: Optional[str] = None,
+    env: Optional[Dict[str, str]] = None,
+) -> Optional[str]:
     """
     Wait for Steam to be running.
 
@@ -846,7 +939,9 @@ def wait_for_steam(use_proton, loginvdf_paths, wine=None, env=None):
     loginvdfs_checked = []
     if use_proton and Args.native_steam_dir != "auto":
         # only check the specified vdf path
-        loginvdfs_checked.append(os.path.join(Args.native_steam_dir, File.loginvdf_inner))
+        loginvdfs_checked.append(
+            os.path.join(Args.native_steam_dir, File.loginvdf_inner)
+        )
     else:
         # check all known vdf paths
         loginvdfs_checked += loginvdf_paths
@@ -855,16 +950,25 @@ def wait_for_steam(use_proton, loginvdf_paths, wine=None, env=None):
         logging.debug("Starting Steam...")
         if use_proton:
             subproc.Popen(
-                ("nohup", "steam"), stdout=subproc.DEVNULL, stderr=subproc.STDOUT)
+                ("nohup", "steam"), stdout=subproc.DEVNULL, stderr=subproc.STDOUT
+            )
         else:
             subproc.Popen(
-                ("nohup",
-                 wine, os.path.join(Args.wine_steam_dir, "steam.exe"), "-no-cef-sandbox"),
-                env=env, stdout=subproc.DEVNULL, stderr=subproc.STDOUT)
-        # use Assignment Expressions when we require Python 3.8 or newer
+                (
+                    "nohup",
+                    wine,
+                    os.path.join(Args.wine_steam_dir, "steam.exe"),
+                    "-no-cef-sandbox",
+                ),
+                env=env,
+                stdout=subproc.DEVNULL,
+                stderr=subproc.STDOUT,
+            )
+        # use Assignment Expressions (walrus operator :=)
         # if (guessed_steamdir := wait_for_loginvdf_update(...)) is not None:
         guessed_steamdir = wait_for_loginvdf_update(
-            use_proton, loginvdfs_checked, loginvdfs_timestamps)
+            use_proton, loginvdfs_checked, loginvdfs_timestamps
+        )
         if guessed_steamdir is not None:
             steamdir = guessed_steamdir
     else:
@@ -884,7 +988,9 @@ def wait_for_steam(use_proton, loginvdf_paths, wine=None, env=None):
     return steamdir
 
 
-def write_downloaded_file(outfile, res, md5hash, name_getting):
+def write_downloaded_file(
+    outfile: str, res: Any, md5hash: Any, name_getting: str
+) -> None:
     """
     Write downloaded file.
 
@@ -904,8 +1010,9 @@ def write_downloaded_file(outfile, res, md5hash, name_getting):
                 break
             if Args.download_throttle > 0:
                 # wait if the speed is too fast
-                while (time.time() - time_before_download < bufsize / (
-                        1024 * Args.download_throttle)):
+                while time.time() - time_before_download < bufsize / (
+                    1024 * Args.download_throttle
+                ):
                     time.sleep(0.001)
             downloaded += len(buf)
             f_out.write(buf)
@@ -916,11 +1023,13 @@ def write_downloaded_file(outfile, res, md5hash, name_getting):
                 ten_percent_count = int(downloaded * 10 / int_content_len)
                 # downloaded / length [progressbar]
                 # e.g. 555.5K / 777.7K [=======>  ]
-                progress = f"{get_short_size(downloaded)} / " \
-                           f"{get_short_size(int_content_len)} " \
-                           f"[{'=' * ten_percent_count}" \
-                           f"{'>' if ten_percent_count < 10 else ''}" \
-                           f"{' ' * max(9 - ten_percent_count, 0)}]"
+                progress = (
+                    f"{get_short_size(downloaded)} / "
+                    f"{get_short_size(int_content_len)} "
+                    f"[{'=' * ten_percent_count}"
+                    f"{'>' if ten_percent_count < 10 else ''}"
+                    f"{' ' * max(9 - ten_percent_count, 0)}]"
+                )
             else:
                 progress = get_short_size(downloaded)
             print(f"\r{name_getting:49}{progress:>30}", end="")
@@ -928,8 +1037,10 @@ def write_downloaded_file(outfile, res, md5hash, name_getting):
             # wget-like timestamping for downloaded files
             lastmod = res.getheader("Last-Modified")
             if lastmod:
-                timestamp = time.mktime(
-                    time.strptime(lastmod, "%a, %d %b %Y %H:%M:%S GMT")) - time.timezone
+                timestamp = (
+                    time.mktime(time.strptime(lastmod, "%a, %d %b %Y %H:%M:%S GMT"))
+                    - time.timezone
+                )
                 try:
                     os.utime(outfile, (timestamp, timestamp))
                 except OSError:

@@ -1,0 +1,35 @@
+Potential Improvements for truckersmp-cli
+==========================================
+
+1. Game Configuration Management
+   - Add support for multiple game profiles/presets
+   - Add ability to export/import configuration
+
+2. UI/UX Improvements
+   - Add interactive TUI (Text User Interface) for easier configuration
+   - Add progress bars for download/update operations
+   - Improve error messages with actionable suggestions
+
+3. Performance
+   - Add caching for game version checks
+   - Optimize startup time by reducing redundant checks
+
+4. Platform Support
+   - Add macOS support (Apple Silicon via Rosetta 2)
+   - Improve FreeBSD compatibility
+
+5. Mod Management
+   - Add built-in mod manager/organizer
+   - Add mod profile switching
+
+6. Logging & Diagnostics
+   - Add self-diagnostic tool for troubleshooting
+   - Add more detailed game crash logs
+
+7. Automation
+   - Add scheduled update checks
+   - Add scriptable hooks for pre/post launch actions
+
+8. Documentation
+   - Add more examples for advanced usage
+   - Add troubleshooting guide for common issues
