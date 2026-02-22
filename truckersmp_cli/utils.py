@@ -44,8 +44,10 @@ def activate_native_d3dcompiler_47(prefix: str, wine: List[str]) -> None:
     # check whether DLL is already downloaded
     need_download = True
     try:
-        if check_hash(File.d3dcompiler_47, File.d3dcompiler_47_md5, hashlib.md5()):
-            logging.debug("d3dcompiler_47.dll is present, MD5 is OK.")
+        if check_hash(
+            File.d3dcompiler_47, File.d3dcompiler_47_sha256, hashlib.sha256()
+        ):
+            logging.debug("d3dcompiler_47.dll is present, SHA256 is OK.")
             need_download = False
     except OSError:
         pass
@@ -58,7 +60,7 @@ def activate_native_d3dcompiler_47(prefix: str, wine: List[str]) -> None:
         if not download_files(
             URL.github,
             [
-                (URL.d3dcompilerpath, File.d3dcompiler_47, File.d3dcompiler_47_md5),
+                (URL.d3dcompilerpath, File.d3dcompiler_47, File.d3dcompiler_47_sha256),
             ],
         ):
             sys.exit("Failed to download d3dcompiler_47.dll")
@@ -130,7 +132,7 @@ def check_hash(path: str, digest: str, hashobj: Any) -> bool:
 
     path: Path to the input file
     digest: Expected hex digest string
-    hashobj: hashlib object (e.g. hashlib.md5())
+    hashobj: hashlib object (e.g. hashlib.sha256())
     """
     with open(path, "rb") as f_in:
         while True:
@@ -219,9 +221,9 @@ def download_files(
     conn = http.client.HTTPSConnection(host)
     try:
         while len(files_to_download) > 0:
-            md5hash = hashlib.md5()
+            sha256hash = hashlib.sha256()
             dest = {}
-            path, dest["abspath"], md5 = files_to_download[0]
+            path, dest["abspath"], sha256 = files_to_download[0]
             dest["name"] = os.path.basename(dest["abspath"])
             dest["dir"] = os.path.dirname(dest["abspath"])
             name_getting = f"[{file_count}/{num_of_files}] Get: {dest['name']}"
@@ -249,7 +251,7 @@ def download_files(
                 if not download_files(
                     newloc.netloc,
                     [
-                        (newpath, dest["abspath"], md5),
+                        (newpath, dest["abspath"], sha256),
                     ],
                     (file_count, num_of_files),
                 ):
@@ -265,11 +267,11 @@ def download_files(
                 )
                 return False
 
-            write_downloaded_file(dest["abspath"], res, md5hash, name_getting)
+            write_downloaded_file(dest["abspath"], res, sha256hash, name_getting)
 
-            if md5hash.hexdigest() != md5:
-                print(f"\r{dest['name']:67}{'MD5 MISMATCH':>12}")
-                logging.error("MD5 mismatch for %s", dest)
+            if sha256hash.hexdigest() != sha256:
+                print(f"\r{dest['name']:67}{'SHA256 MISMATCH':>12}")
+                logging.error("SHA256 mismatch for %s", dest)
                 return False
 
             # downloaded successfully
@@ -540,7 +542,7 @@ def is_d3dcompiler_setup_skippable() -> bool:
         wine_prefix = os.path.join(wine_prefix, "pfx")
     installed_dll_path = os.path.join(wine_prefix, File.d3dcompiler_47_inner)
     try:
-        if check_hash(installed_dll_path, File.d3dcompiler_47_md5, hashlib.md5()):
+        if check_hash(installed_dll_path, File.d3dcompiler_47_sha256, hashlib.sha256()):
             have_native_dll = True
     except OSError:
         pass
@@ -761,8 +763,8 @@ def setup_wine_discord_ipc_bridge() -> str:
     # check whether the file is already downloaded
     need_download = True
     try:
-        if check_hash(File.ipcbridge, File.ipcbridge_md5, hashlib.md5()):
-            logging.debug("winediscordipcbridge.exe is present, MD5 is OK.")
+        if check_hash(File.ipcbridge, File.ipcbridge_sha256, hashlib.sha256()):
+            logging.debug("winediscordipcbridge.exe is present, SHA256 is OK.")
             need_download = False
     except OSError:
         pass
@@ -775,7 +777,7 @@ def setup_wine_discord_ipc_bridge() -> str:
         if not download_files(
             URL.github,
             [
-                (URL.ipcbrpath, File.ipcbridge, File.ipcbridge_md5),
+                (URL.ipcbrpath, File.ipcbridge, File.ipcbridge_sha256),
             ],
         ):
             sys.exit("Failed to download winediscordipcbridge.exe")
@@ -989,17 +991,17 @@ def wait_for_steam(
 
 
 def write_downloaded_file(
-    outfile: str, res: Any, md5hash: Any, name_getting: str
+    outfile: str, res: Any, sha256hash: Any, name_getting: str
 ) -> None:
     """
     Write downloaded file.
 
     outfile: A path to destination file
     res: A response from getresponse()
-    md5hash: An md5 object
+    sha256hash: A sha256 object
     name_getting: The "[X/Y] Get:" string
     """
-    bufsize = md5hash.block_size * 256
+    bufsize = sha256hash.block_size * 256
     with open(outfile, "wb") as f_out:
         downloaded = 0
         while True:
@@ -1016,7 +1018,7 @@ def write_downloaded_file(
                     time.sleep(0.001)
             downloaded += len(buf)
             f_out.write(buf)
-            md5hash.update(buf)
+            sha256hash.update(buf)
             content_len = res.getheader("Content-Length")
             if content_len:
                 int_content_len = int(content_len)

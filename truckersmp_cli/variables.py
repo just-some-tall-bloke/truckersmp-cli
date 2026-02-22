@@ -116,9 +116,9 @@ class File:
     overlayrenderer_inner = "ubuntu12_64/gameoverlayrenderer.so"
     d3dcompiler_47 = os.path.join(Dir.dllsdir, "d3dcompiler_47.dll")
     d3dcompiler_47_inner = os.path.join(Dir.system32_inner, "d3dcompiler_47.dll")
-    d3dcompiler_47_md5 = "b2cc65e1930e75f563078c6a20221b37"
+    d3dcompiler_47_sha256 = "b2cc65e1930e75f563078c6a20221b37"
     ipcbridge = os.path.join(Dir.ipcbrdir, "winediscordipcbridge.exe")
-    ipcbridge_md5 = "a433fb2ec994b664b662e798095f9059"
+    ipcbridge_sha256 = "a433fb2ec994b664b662e798095f9059"
     sdl2_soname = "libSDL2-2.0.so.0"
     flatpak_helper = os.path.join(Dir.scriptdir, "flatpak_helper.py")
     steamruntime_helper = os.path.join(Dir.scriptdir, "steamruntime_helper.py")
